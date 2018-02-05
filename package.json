@@ -1,0 +1,33 @@
+{
+  "name": "fcc-api-projects-timestamp",
+  "version": "0.0.1",
+  "description": "An FCC Backend Challenge",
+  "main": "server.js",
+  "author": "Aaron Rhodebeck",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node ./spec/support/run.js"
+  },
+  "dependencies": {
+    "express": "^4.16.2",
+    "cors": "^2.8.4"
+  },
+  "engines": {
+    "node": "6.12.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://githost.com/camper/repo.git"
+  },
+  "keywords": [
+    "node",
+    "hyperdev",
+    "express",
+    "freecodecamp"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "jasmine": "^2.9.0",
+    "jasmine-spec-reporter": "^4.2.1"
+  }
+}
