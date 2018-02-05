@@ -62,3 +62,6 @@ typings/
 
 # vscode specific settings
 .vscode/
+
+# Private environment keys and settings
+.env
