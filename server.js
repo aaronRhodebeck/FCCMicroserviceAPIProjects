@@ -3,7 +3,15 @@
 
 // init project
 var express = require('express');
+require('dotenv').config();
 var app = express();
+var mongoose = require('mongoose');
+mongoose.connect(process.env.MONGO_URI);
+
+// #region Middleware
+var bp = require('body-parser');
+app.use(bp.json());
+// #endregion
 
 // enable CORS (https://en.wikipedia.org/wiki/Cross-origin_resource_sharing)
 // so that your API is remotely testable by FCC
@@ -13,7 +21,7 @@ app.use(cors({ optionSuccessStatus: 200 })); // some legacy browsers choke on 20
 // http://expressjs.com/en/starter/static-files.html
 app.use(express.static('public'));
 
-// http://expressjs.com/en/starter/basic-routing.html
+// #region http://expressjs.com/en/starter/basic-routing.html
 app.get('/', function(req, res) {
   res.sendFile(__dirname + '/views/index.html');
 });
@@ -32,13 +40,15 @@ app.get('/exercise-tracker', function(req, res) {
 app.get('/file-metadata-microservice', function(req, res) {
   res.sendFile(__dirname + '/views/file-metadata-microservice.html');
 });
+// #endregion
 
-// your first API endpoint...
+// #region your first API endpoint...
 app.get('/api/hello', function(req, res) {
   res.json({ greeting: 'hello API' });
 });
+// #endregion
 
-// Time stamp API endpoint
+// #region Time stamp API endpoint
 var parseDate = require('./src/TimeStamp.js').parseDate;
 var unixTimeStampFrom = require('./src/TimeStamp.js').unixTimeStampFrom;
 var utcTimeStampFrom = require('./src/TimeStamp.js').utcTimeStampFrom;
@@ -53,16 +63,48 @@ app.get('/api/timestamp/:date', function(req, res) {
   const date = parseDate(req.params.date);
   res.json({ unix: unixTimeStampFrom(date), utc: utcTimeStampFrom(date) });
 });
+// #endregion
 
-// Request Header Parser API endpoint
+// #region Request Header Parser API endpoint
 var parseHeader = require('./src/RequestHeaderParser');
 
 app.get('/api/whoami', function(req, res) {
   const parsedHeader = parseHeader(req.headers);
   res.json(parsedHeader);
 });
+// #endregion
 
-// listen for requests :)
+// #region URL Shortener endpoint
+const makeModel = require('./src/URLShortener').makeURLShortenerModel;
+const shortURLModel = makeModel(mongoose);
+const shortenURL = require('./src/URLShortener');
+const dns = require('dns');
+const getOriginalURL = require('./src/URLShortener').getOriginalURL;
+
+app.post('/api/shorturl/new', function(req, res) {
+  const baseURL = 'https://aaron-rhodebeck-freecodecamp-api-projects.glitch.me';
+
+  dns.lookup(req.body.newURL, function(err) {
+    if (err) {
+      res.json({ original_url: req.body.newURL, shortURL: 'Invalid URL' });
+    } else {
+      shortenURL(req.body.newURL, shortURLModel, baseURL).then(function(result) {
+        res.json({ original_url: req.body.newURL, shortURL: result });
+      });
+    }
+  });
+});
+
+app.get('/api/shorturl/:num', function(req, res) {
+  getOriginalURL(req.params.num, shortURLModel).then(function(result) {
+    res.redirect(result);
+  });
+});
+
+// #endregion
+
+// #region listen for requests :)
 var listener = app.listen(process.env.PORT, function() {
   console.log('Your app is listening on port ' + listener.address().port);
 });
+// #endregion
