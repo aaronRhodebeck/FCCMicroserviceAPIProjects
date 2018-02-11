@@ -3,14 +3,14 @@
 
 // init project
 var express = require('express');
-require('dotenv').config();
 var app = express();
 var mongoose = require('mongoose');
-mongoose.connect(process.env.MONGO_URI);
+mongoose.connect(process.env.MONGO_URI).catch(err => console.log(err));
 
 // #region Middleware
 var bp = require('body-parser');
 app.use(bp.json());
+app.use(bp.urlencoded())
 // #endregion
 
 // enable CORS (https://en.wikipedia.org/wiki/Cross-origin_resource_sharing)
@@ -80,16 +80,21 @@ const shortURLModel = makeModel(mongoose);
 const shortenURL = require('./src/URLShortener');
 const dns = require('dns');
 const getOriginalURL = require('./src/URLShortener').getOriginalURL;
+const parseURL = require('./src/URLShortener').parseURL;
 
 app.post('/api/shorturl/new', function(req, res) {
-  const baseURL = 'https://aaron-rhodebeck-freecodecamp-api-projects.glitch.me';
+  const requestedURL = parseURL(req.body.newURL)
+  const baseURL = 'https://aaron-rhodebeck-freecodecamp-api-projects.glitch.me/api/shorturl';
 
-  dns.lookup(req.body.newURL, function(err) {
+  dns.lookup(requestedURL, function(err) {
     if (err) {
-      res.json({ original_url: req.body.newURL, shortURL: 'Invalid URL' });
+      res.json({ original_url: requestedURL, shortURL: 'Invalid URL' });
     } else {
-      shortenURL(req.body.newURL, shortURLModel, baseURL).then(function(result) {
-        res.json({ original_url: req.body.newURL, shortURL: result });
+      shortenURL(requestedURL, shortURLModel, baseURL).then(function(result) {
+        res.json({ original_url: requestedURL, shortURL: result });
+      }).catch(function(err) {
+        res.json({err: err})
+        console.log(err);
       });
     }
   });
@@ -97,8 +102,8 @@ app.post('/api/shorturl/new', function(req, res) {
 
 app.get('/api/shorturl/:num', function(req, res) {
   getOriginalURL(req.params.num, shortURLModel).then(function(result) {
-    res.redirect(result);
-  });
+    res.redirect(`https://${result}`)
+  }).catch(err => console.log(err));
 });
 
 // #endregion
