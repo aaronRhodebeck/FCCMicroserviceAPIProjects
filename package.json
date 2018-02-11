@@ -6,7 +6,7 @@
   "author": "Aaron Rhodebeck",
   "scripts": {
     "start": "node server.js",
-    "test": "node ./spec/support/run.js"
+    "test": "babel-node ./spec/support/run.js"
   },
   "dependencies": {
     "body-parser": "^1.18.2",

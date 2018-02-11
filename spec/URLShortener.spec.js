@@ -3,7 +3,7 @@ const shortenURL = require('../src/URLShortener');
 // These tests should probably be rewritten as integration tests
 // As it is they are very dependent on the database specific methods
 
-describe('URLShortener.js', () => {
+xdescribe('URLShortener.js', () => {
   const mockDB = {
     findOne(obj, callback) {
       return callback(null, { shortenedURL: 'www.google.com' });
@@ -38,11 +38,9 @@ describe('URLShortener.js', () => {
   });
 });
 
-fdescribe('async', () => {
+xdescribe('async', () => {
   var mongoose = require('mongoose');
-  mongoose.connect(
-    'mongodb://arhodebeck:mrsjurgenson@ds229458.mlab.com:29458/freecodecamp-backend-challenges',
-  );
+  mongoose.connect(process.env.MONGO_URI);
 
   const makeModel = require('../src/URLShortener').makeURLShortenerModel;
   const shortURLModel = makeModel(mongoose);
