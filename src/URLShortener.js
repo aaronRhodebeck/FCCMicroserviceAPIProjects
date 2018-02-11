@@ -1,3 +1,7 @@
+function parseURL (string) {
+  return string.replace(/https:\/\/|http:\/\//, '')
+}
+
 function makeURLShortenerModel(db) {
   const schema = new db.Schema({
     requestedURL: { type: String, required: true },
@@ -20,7 +24,12 @@ async function shortenURL(string, Model, baseURL) {
 }
 
 async function getOriginalURL(num, Model) {
-  const record = await Model.findOne({ index: num });
+  let record;
+  try {
+    record = await Model.findOne({ index: num });
+  } catch (err) {
+    console.log(err)
+  }
   return record.requestedURL;
 }
 
@@ -30,12 +39,8 @@ function alreadyInDB(requestedURL, Model) {
 }
 
 async function getShortenedURL(requestedURL, Model, baseURL) {
-  try {
     const record = await Model.findOne({ requestedURL }).exec();
     return `${baseURL}/${record.index}`;
-  } catch (err) {
-    return err;
-  }
 }
 
 async function getNewURL(string, collection, baseURL) {
@@ -43,7 +48,7 @@ async function getNewURL(string, collection, baseURL) {
     const record = await addURLToDB(string, collection);
     return `${baseURL}/${record.index}`;
   } catch (err) {
-    return err;
+    console.log(err);
   }
 }
 
@@ -58,5 +63,6 @@ async function addURLToDB(string, Model) {
 // #endregion
 
 module.exports = shortenURL;
+module.exports.parseURL = parseURL;
 module.exports.makeURLShortenerModel = makeURLShortenerModel;
 module.exports.getOriginalURL = getOriginalURL;
