@@ -120,6 +120,7 @@ import {
   addUser,
   getExerciseTrackerModel,
   addExercise,
+  getExerciseLog,
 } from './src/ExerciseTracker';
 
 const userNameModel = getUserNameModel(mongoose);
@@ -148,12 +149,24 @@ app.post('/api/exercise/add', async function(req, res) {
     result = await addExercise(exercise, exerciseModel);
   } catch (err) {
     console.log(err);
-    res.json({ err: err });
+    res.json({ err: err.message });
   }
   res.json(result);
 });
 
-// #end region
+app.get('/api/exercise/log', async function(req, res) {
+  const { userId, from, to, limit } = req.query;
+  let result;
+  try {
+    result = await getExerciseLog(exerciseModel, userId, from, to, limit);
+  } catch (err) {
+    console.log(err);
+    res.json({ err: err.message });
+  }
+  res.json(result);
+});
+
+// #endregion
 
 // #region listen for requests :)
 var listener = app.listen(process.env.PORT, function() {

@@ -42,7 +42,12 @@ describe('ExerciseTracker unit tests', () => {
 // Integration tests on live database
 // ***** USE WITH CAUTION ******
 import mongoose from 'mongoose';
-import { userNameIsTaken, addUser, addExercise } from '../src/ExerciseTracker';
+import {
+  userNameIsTaken,
+  addUser,
+  addExercise,
+  getExerciseLog,
+} from '../src/ExerciseTracker';
 require('dotenv').config();
 
 describe('ExerciseTracker integration tests', () => {
@@ -201,6 +206,85 @@ describe('ExerciseTracker integration tests', () => {
     it('should have a success of true if the exercise object is valid', async () => {
       const result = await addExercise(sampleExercise, testExerciseModel);
       expect(result.success).toBe(true);
+    });
+  });
+  describe('getExerciseLog()', () => {
+    const user = 'logTestUser';
+    const logDates = ['2008-1-1', '2009-2-2', '2010-3-3', '2011-4-4'];
+
+    beforeAll(async done => {
+      addUser(user, testUserNameModel);
+      for (let i = 0, len = logDates.length; i < len; i++) {
+        const date = new Date(logDates[i]);
+        const exercise = {
+          userName: user,
+          exerciseDescription: 'Running',
+          duration: 10,
+          date,
+        };
+        await addExercise(exercise, testExerciseModel);
+      }
+      done();
+    });
+    afterAll(async done => {
+      await testExerciseModel.remove({ userName: user });
+      done();
+    });
+
+    it('should accept at least a model object and string and return an object', async () => {
+      const result = await getExerciseLog(testExerciseModel, '');
+      expect(result).toEqual(jasmine.any(Object));
+    });
+    it('should return an object with two properties', async () => {
+      const result = await getExerciseLog(testExerciseModel, '');
+      expect(Object.keys(result).length).toBe(2);
+    });
+    it('should return an object with a success property', async () => {
+      const result = await getExerciseLog(testExerciseModel, '');
+      expect(Object.keys(result).includes('success')).toBe(true);
+    });
+    it('should return an object with a log property', async () => {
+      const result = await getExerciseLog(testExerciseModel, '');
+      expect(Object.keys(result).includes('log')).toBe(true);
+    });
+    it('should have a success that is a boolean', async () => {
+      const result = await getExerciseLog(testExerciseModel, '');
+      expect(result.success).toEqual(jasmine.any(Boolean));
+    });
+    it('should have a success of true if no error occured', async () => {
+      const result = await getExerciseLog(testExerciseModel, '');
+      expect(result.success).toBe(true);
+    });
+    it('should have a log that is an array', async () => {
+      const result = await getExerciseLog(testExerciseModel, '');
+      expect(result.log).toEqual(jasmine.any(Array));
+    });
+    it('should have all exercise records from a user if only a user name is passed', async () => {
+      const result = await getExerciseLog(testExerciseModel, user, null, null, null);
+      expect(result.log.length).toEqual(logDates.length);
+    });
+    it('should have only the records after a date if a "from" is passed', async () => {
+      const result = await getExerciseLog(testExerciseModel, user, new Date('2009-1-1'));
+      expect(result.log.length).toBe(3);
+    });
+    it('should have only the records before a date if a "to" is passed', async () => {
+      const result = await getExerciseLog(
+        testExerciseModel,
+        user,
+        null,
+        new Date('2011-1-1'),
+      );
+      expect(result.log.length).toBe(3);
+    });
+    it('should have no more than the "limit" if passed', async () => {
+      const result = await getExerciseLog(
+        testExerciseModel,
+        user,
+        undefined,
+        undefined,
+        2,
+      );
+      expect(result.log.length).toBeLessThanOrEqual(2);
     });
   });
 });

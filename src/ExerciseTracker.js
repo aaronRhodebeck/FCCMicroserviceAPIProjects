@@ -101,3 +101,28 @@ async function addExerciseToCollection(exercise, model) {
   }
   return true;
 }
+
+export async function getExerciseLog(model, userName, from, to, limit) {
+  const optionKeys = ['from', 'to', 'limit'];
+  const options = { from, to, limit };
+  const query = model.find({ userName });
+
+  optionKeys.forEach(option => {
+    if (option === 'from' && options.from) {
+      query.where('date').gt(from);
+    } else if (option === 'to' && options.to) {
+      query.where('date').lt(to);
+    } else if (option === 'limit' && options.limit) {
+      query.limit(limit);
+    }
+  });
+
+  let result = { success: true, log: [] };
+  try {
+    result.log = await query.exec();
+  } catch (err) {
+    console.log(err);
+    result = { success: false, log: [] };
+  }
+  return result;
+}
