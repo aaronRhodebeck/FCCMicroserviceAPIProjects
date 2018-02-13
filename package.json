@@ -5,7 +5,7 @@
   "main": "server.js",
   "author": "Aaron Rhodebeck",
   "scripts": {
-    "start": "node server.js",
+    "start": "babel-node server.js",
     "test": "babel-node ./spec/support/run.js"
   },
   "dependencies": {

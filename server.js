@@ -2,6 +2,7 @@
 // where your node app starts
 
 // init project
+require('dotenv').config();
 var express = require('express');
 var app = express();
 var mongoose = require('mongoose');
@@ -10,7 +11,7 @@ mongoose.connect(process.env.MONGO_URI).catch(err => console.log(err));
 // #region Middleware
 var bp = require('body-parser');
 app.use(bp.json());
-app.use(bp.urlencoded())
+app.use(bp.urlencoded());
 // #endregion
 
 // enable CORS (https://en.wikipedia.org/wiki/Cross-origin_resource_sharing)
@@ -83,30 +84,76 @@ const getOriginalURL = require('./src/URLShortener').getOriginalURL;
 const parseURL = require('./src/URLShortener').parseURL;
 
 app.post('/api/shorturl/new', function(req, res) {
-  const requestedURL = parseURL(req.body.newURL)
-  const baseURL = 'https://aaron-rhodebeck-freecodecamp-api-projects.glitch.me/api/shorturl';
+  const requestedURL = parseURL(req.body.newURL);
+  const baseURL =
+    'https://aaron-rhodebeck-freecodecamp-api-projects.glitch.me/api/shorturl';
 
   dns.lookup(requestedURL, function(err) {
     if (err) {
       res.json({ original_url: requestedURL, shortURL: 'Invalid URL' });
     } else {
-      shortenURL(requestedURL, shortURLModel, baseURL).then(function(result) {
-        res.json({ original_url: requestedURL, shortURL: result });
-      }).catch(function(err) {
-        res.json({err: err})
-        console.log(err);
-      });
+      shortenURL(requestedURL, shortURLModel, baseURL)
+        .then(function(result) {
+          res.json({ original_url: requestedURL, shortURL: result });
+        })
+        .catch(function(err) {
+          res.json({ err: err });
+          console.log(err);
+        });
     }
   });
 });
 
 app.get('/api/shorturl/:num', function(req, res) {
-  getOriginalURL(req.params.num, shortURLModel).then(function(result) {
-    res.redirect(`https://${result}`)
-  }).catch(err => console.log(err));
+  getOriginalURL(req.params.num, shortURLModel)
+    .then(function(result) {
+      res.redirect(`https://${result}`);
+    })
+    .catch(err => console.log(err));
 });
 
 // #endregion
+
+// #region Exercise Tracker endpoint
+import {
+  getUserNameModel,
+  addUser,
+  getExerciseTrackerModel,
+  addExercise,
+} from './src/ExerciseTracker';
+
+const userNameModel = getUserNameModel(mongoose);
+const exerciseModel = getExerciseTrackerModel(mongoose);
+
+app.post('/api/exercise/new-user', async function(req, res) {
+  let result;
+  try {
+    result = await addUser(req.body.username, userNameModel);
+  } catch (err) {
+    console.log(err);
+    res.json({ err });
+  }
+  res.json({ result });
+});
+
+app.post('/api/exercise/add', async function(req, res) {
+  const exercise = {
+    userName: req.body.userId,
+    exerciseDescription: req.body.description,
+    duration: req.body.duration,
+    date: req.body.date,
+  };
+  let result;
+  try {
+    result = await addExercise(exercise, exerciseModel);
+  } catch (err) {
+    console.log(err);
+    res.json({ err: err });
+  }
+  res.json(result);
+});
+
+// #end region
 
 // #region listen for requests :)
 var listener = app.listen(process.env.PORT, function() {
