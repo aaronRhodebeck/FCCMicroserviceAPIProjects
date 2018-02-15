@@ -122,6 +122,7 @@ import {
   addExercise,
   getExerciseLog,
 } from './src/ExerciseTracker';
+import { dirname } from 'path';
 
 const userNameModel = getUserNameModel(mongoose);
 const exerciseModel = getExerciseTrackerModel(mongoose);
@@ -166,6 +167,20 @@ app.get('/api/exercise/log', async function(req, res) {
   res.json(result);
 });
 
+// #endregion
+
+// #region File Metadata endpoint
+var multer = require('multer');
+const upload = multer();
+
+function sendFileData(req, res) {
+  res.json({
+    fileName: req.file.originalname,
+    fileSize: req.file.size,
+  });
+}
+
+app.post('/api/fileanalyse', upload.single('upfile'), sendFileData);
 // #endregion
 
 // #region listen for requests :)
